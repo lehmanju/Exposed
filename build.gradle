@@ -11,6 +11,7 @@ buildscript {
     }
     dependencies {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+	classpath "org.jfrog.buildinfo:build-info-extractor-gradle:+"
     }
 }
 
@@ -23,6 +24,7 @@ apply plugin: 'java'
 apply plugin: 'kotlin'
 apply plugin: 'maven'
 apply plugin: "maven-publish"
+apply plugin: 'com.jfrog.artifactory'
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
@@ -46,6 +48,9 @@ repositories {
     }
     maven {
         url "http://dl.bintray.com/kotlin/kotlin"
+    }
+    maven {
+    	url "https://msrd0.duckdns.org/artifactory/gradle"
     }
 }
 
@@ -96,6 +101,31 @@ bintray {
         vcsUrl = 'https://github.com/JetBrains/Exposed.git'
     }
 }
+
+artifactory {
+  contextUrl = 'https://msrd0.duckdns.org/artifactory'
+	resolve {
+		repository {
+			repoKey = 'gradle'
+		}
+	}
+	publish {
+		repository {
+			repoKey = 'local'
+			username = 'gitlab-ci'
+			password = System.getenv("ARTIFACTORY_PASSWORD")
+			maven = true
+		}
+		defaults {
+			publications('exposed', 'spring_transaction')
+		}
+	}
+}
+
+artifactoryPublish {
+	dependsOn jar
+}
+
 
 afterReleaseBuild.dependsOn bintrayUpload
 
